@@ -52,17 +52,22 @@ pub fn subscribe(tcp : & mut TcpStream, topic : Topic, qos : QoS) -> Result<(), 
 		topic_filters : vec!((topic, qos))
 	}.write_to(tcp));
 	match try!(Packet::read_from(tcp)) {
-		Packet::SUBACK{..} => {},
+		Packet::SUBACK{..} => Ok(()),
 		_ => panic!("Bad response")
-	};
+	}
+} 
+
+pub fn listen(tcp : & mut TcpStream) -> Result<(), Box<Error>> {
 	println!("Listen!");
 	loop {
 		//TODO
-		println!("L");
-		println!("PACKET RECEIVED {:?}", try!(Packet::read_from(tcp)));
-		println!("EL");
+		let packet = try!(Packet::read_from(tcp));
+		println!("PACKET RECEIVED {:?}", packet);
+		if let Packet::PUBLISH{ message : Message{ payload, .. }, .. } = packet {
+			println!("\tPAYLOAD {:?}", String::from_utf8_lossy(&payload));
+		}
 	}
-} 
+}
 
 pub fn disconnect(tcp : & mut TcpStream) -> Result<(), Box<Error>> {
 	try!(Packet::DISCONNECT.write_to(tcp));

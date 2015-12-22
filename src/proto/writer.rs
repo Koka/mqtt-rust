@@ -5,10 +5,8 @@ pub trait Writable {
 	fn write_to(&self, writer : & mut io::Write) -> Result<usize, io::Error>;
 }
 
-impl Writable for Packet {
+impl Writable for Packet{
 	fn write_to(&self, writer : & mut io::Write) -> Result<usize, io::Error> {
-		println!("WRITE PACKET {:?}", self);
-		
 		let flags : u8 = match self {
 			&Packet::PUBLISH { dup, ref message, .. } => {
 				let mut flags = 0;
@@ -151,7 +149,7 @@ impl Writable for Packet {
 						..
 					}) => {
 						vec.extend(len_str(&topic.0));
-						vec.extend(len_arr(payload));
+						vec.extend(len_arr(&payload.0));
 					},
 					_ => {}
 				}
@@ -168,7 +166,7 @@ impl Writable for Packet {
 			},
 			&Packet::PUBLISH{ref message, ..} => {
 				let mut vec = vec!();
-				vec.extend(&message.payload);
+				vec.extend(&message.payload.0);
 				Some(vec)
 			},
 			&Packet::SUBSCRIBE{ref topic_filters, ..} => {

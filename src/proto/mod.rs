@@ -1,5 +1,9 @@
-pub mod writer;
-pub mod reader;
+mod writer;
+mod reader;
+pub mod client;
+
+use std::fmt::Display;
+use std::fmt;
 
 enum_from_primitive! {
 	#[derive(Copy, Clone, Debug)]
@@ -33,15 +37,54 @@ enum_from_primitive! {
 }
 
 #[derive(Debug)]
-pub struct Topic(pub String);
+pub struct Topic(String);
+
+impl Topic {
+	pub fn new(str : &str) -> Self {
+		Topic(str.to_string())
+	}
+	
+	pub fn new_owned(str : String) -> Self {
+		Topic(str)
+	}
+}
+
+impl Display for Topic {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 
 #[derive(Debug)]
 pub struct PacketId(pub u16);
 
 #[derive(Debug)]
+pub struct Payload(Vec<u8>);
+
+impl Payload {
+	pub fn new(buf : &[u8]) -> Self {
+		Payload(buf.to_vec())
+	}
+	
+	pub fn new_str(str : &str) -> Self {
+		Payload(str.to_string().into_bytes())
+	}
+	
+	pub fn new_owned(buf : Vec<u8>) -> Self {
+		Payload(buf)
+	}
+}
+
+impl ToString for Payload {
+	fn to_string(&self) -> String {
+		String::from_utf8_lossy(&self.0).to_string()
+	}
+}
+
+#[derive(Debug)]
 pub struct Message {
 	pub topic : Topic,
-	pub payload : Vec<u8>,
+	pub payload : Payload,
 	pub qos : QoS,
 	pub retain : bool
 }

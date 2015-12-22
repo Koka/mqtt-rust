@@ -49,8 +49,6 @@ impl Readable for Packet {
 
 		let mut remaining = try!(read_vec(reader, remaining_length)).into_iter().peekable();
 		
-		println!("READ PACKET type={} flags={} remaining={:?}", packet_type, flags, remaining_length);
-		
 		let result = match packet_type {
 			1 => {
 				skip(&mut remaining, 7);
@@ -70,8 +68,8 @@ impl Readable for Packet {
 					let topic = try!(len_str(&mut remaining));
 					let payload = try!(len_arr(&mut remaining));
 					Some(Message{
-						topic : Topic(topic),
-						payload : payload,
+						topic : Topic::new_owned(topic),
+						payload : Payload::new_owned(payload),
 						qos : try!(QoS::from_u8(will_qos).ok_or(ReaderError::BadQoS(will_qos))),
 						retain : will_retain
 					})
@@ -126,8 +124,8 @@ impl Readable for Packet {
 				Ok(Packet::PUBLISH{
 					dup : dup,
 					message : Message {
-						topic : Topic(topic),
-						payload : payload,
+						topic : Topic::new_owned(topic),
+						payload : Payload::new_owned(payload),
 						qos : qos,
 						retain : retain
 					},
@@ -156,7 +154,7 @@ impl Readable for Packet {
 				while remaining.peek().is_some() {
 					let topic = try!(len_str(&mut remaining));
 					let qos = try!(remaining.next().ok_or(ReaderError::IncompleteMessage));
-					vec.push((Topic(topic), try!(QoS::from_u8(qos).ok_or(ReaderError::BadQoS(qos)))));					
+					vec.push((Topic::new_owned(topic), try!(QoS::from_u8(qos).ok_or(ReaderError::BadQoS(qos)))));					
 				}
 				Ok(Packet::SUBSCRIBE{ packet_id : PacketId(packet_id), topic_filters : vec })
 			},
@@ -174,7 +172,7 @@ impl Readable for Packet {
 				let mut vec = vec!();
 				while remaining.peek().is_some() {
 					let topic = try!(len_str(&mut remaining));
-					vec.push(Topic(topic));					
+					vec.push(Topic::new_owned(topic));					
 				}
 				Ok(Packet::UNSUBSCRIBE{ packet_id : PacketId(packet_id), topic_filters : vec })
 			},
